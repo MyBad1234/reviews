@@ -7,7 +7,7 @@ from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import time
 import datetime
-import query_sql
+from my_modules import query_sql
 
 PROXY_PORT = '1051'
 
@@ -38,7 +38,7 @@ def loadPage(sql, yandex_url):
     proxy_arr = query_sql.getProxy(sql)
     if (proxy_arr):
         query_sql.setValue(sql, 'proxy', 'last_active', str(time.time()), 'id='+str(proxy_arr["id"]))
-        proxy = getProxyObject(proxy_arr['ip'], proxy_arr['username'], proxy_arr['password'])
+        proxy = getProxyObject(proxy_arr['ip'], proxy_arr['login'], proxy_arr['password'])
 
     browser = webdriver.Firefox(options=options, proxy=proxy)
     if (browser):

@@ -9,7 +9,7 @@ logging.getLogger().setLevel(logging.INFO)
 def run():
     sql = query_sql.connect()
     if (sql):
-        queue = query_sql.getFindFilialQueue(sql)
+        queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['find_yandex_reviews'])
         if (queue):
             try:
                 #Если есть задача - присваиваем статус "в работе"
@@ -45,7 +45,6 @@ def run():
             except WebDriverException:
                 if (queue['queue_id']):
                     query_sql.statusCreated(sql, queue['queue_id'])
-                    time.sleep(600)
             except Exception as error:
                 if (queue['queue_id']):
                     error_text = "Ошибка:"+str(repr(error))

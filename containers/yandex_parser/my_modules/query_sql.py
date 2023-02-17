@@ -16,7 +16,7 @@ STATUS = {
 
 #массив с типами
 TYPE = {
-    'find_filial':6,
+    'find_yandex_reviews':6,
     'save_reviews':7
 }
 
@@ -32,10 +32,6 @@ else:
     DB_PASS = ''
     DB_NAME = 'rating'
 DB_CHARSET = 'utf8mb4'
-
-#Получить массив с типами
-def getTypes():
-    return TYPE
 
 #Подключаемся к mysql
 def connect():

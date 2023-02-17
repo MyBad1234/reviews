@@ -27,18 +27,18 @@ RUN FIREFOX_SETUP=firefox-setup.tar.bz2 && \
     ln -s /opt/firefox/firefox /usr/bin/firefox && \
     rm $FIREFOX_SETUP
 
-RUN python3 -m pip install --upgrade pip
-RUN pip3 install -r parser_requirements.txt
-
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 ENV PYTHONUNBUFFERED=1
 
 ENV APP_HOME /usr/src/app
 WORKDIR /$APP_HOME
-VOLUME ./volume:$APP_HOME//volume
-COPY ["containers/yandex_parser", "/usr/app"]
-COPY ["volume", "/usr/app/volume"]
+VOLUME ./volume:/usr/src/app/volume
+COPY ["./containers/yandex_parser", "/usr/src/app"]
+COPY ["./volume", "/usr/src/app/volume"]
+
+RUN python3 -m pip install --upgrade pip
+RUN pip3 install -r parser_requirements.txt
 
 CMD tail -f /dev/null
 CMD python3 app.py
