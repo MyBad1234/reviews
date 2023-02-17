@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  python_yandex_parser:
+    build:
+      context: .
+      dockerfile: containers/docker_yandex_parser
+    image: yandex_parser/latest

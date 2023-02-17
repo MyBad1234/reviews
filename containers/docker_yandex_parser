@@ -28,10 +28,7 @@ RUN FIREFOX_SETUP=firefox-setup.tar.bz2 && \
     rm $FIREFOX_SETUP
 
 RUN python3 -m pip install --upgrade pip
-RUN pip3 install selenium
-RUN pip3 install selenium-wire
-RUN pip3 install pyvirtualdisplay
-RUN pip3 install bs4
+RUN pip3 install -r parser_requirements.txt
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
@@ -39,8 +36,9 @@ ENV PYTHONUNBUFFERED=1
 
 ENV APP_HOME /usr/src/app
 WORKDIR /$APP_HOME
-
-COPY . $APP_HOME/
+VOLUME ./volume:$APP_HOME//volume
+COPY ["containers/yandex_parser", "/usr/app"]
+COPY ["volume", "/usr/app/volume"]
 
 CMD tail -f /dev/null
 CMD python3 app.py
