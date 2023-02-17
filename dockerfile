@@ -28,12 +28,10 @@ RUN FIREFOX_SETUP=firefox-setup.tar.bz2 && \
     rm $FIREFOX_SETUP
 
 RUN python3 -m pip install --upgrade pip
-#RUN pip3 install --pre selenium==4.0.0a6.post2
 RUN pip3 install selenium
 RUN pip3 install selenium-wire
-#RUN pip3 install pyopenssl==22.0.0
-#RUN pip3 install cryptography==38.0.4
 RUN pip3 install pyvirtualdisplay
+RUN pip3 install bs4
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
