@@ -7,22 +7,6 @@ from selenium.webdriver.common.proxy import Proxy, ProxyType
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import time
 import datetime
-from my_modules import query_sql
-
-PROXY_PORT = '1051'
-
-#Получить объект прокси
-def getProxyObject(ip, username, password):
-    proxy = Proxy({
-        'proxyType': ProxyType.MANUAL,
-        'httpProxy': ip+':'+PROXY_PORT,
-        'ftpProxy': ip+':'+PROXY_PORT,
-        'sslProxy': ip+':'+PROXY_PORT,
-        'socks5': ip+':'+PROXY_PORT,
-        'socksUsername': username,
-        'socksPassword': password
-    })
-    return proxy
 
 #Заходим на страницу
 def loadPage(sql, yandex_url):
@@ -34,13 +18,7 @@ def loadPage(sql, yandex_url):
     options.add_argument('--no-sandbox')
     options.add_argument("--disable-gpu")
 
-    #Получаем прокси из базы
-    proxy_arr = query_sql.getProxy(sql)
-    if (proxy_arr):
-        query_sql.setValue(sql, 'proxy', 'last_active', str(time.time()), 'id='+str(proxy_arr["id"]))
-        proxy = getProxyObject(proxy_arr['ip'], proxy_arr['login'], proxy_arr['password'])
-
-    browser = webdriver.Firefox(options=options, proxy=proxy)
+    browser = webdriver.Firefox(options=options)
     if (browser):
         browser.get(yandex_url+'/reviews')
         time.sleep(5)

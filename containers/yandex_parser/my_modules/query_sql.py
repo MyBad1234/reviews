@@ -17,7 +17,8 @@ STATUS = {
 #массив с типами
 TYPE = {
     'find_yandex_reviews':6,
-    'save_reviews':7
+    'save_reviews':7,
+    'python_parser':9
 }
 
 #Настройки БД

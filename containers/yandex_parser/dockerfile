@@ -7,18 +7,11 @@ RUN apt-get update && apt-get install -y \
     curl unzip wget \
     xvfb
 
-
 # install geckodriver and firefox
 RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.32.2/geckodriver-v0.32.2-linux64.tar.gz && \
     tar -zxf geckodriver-v0.32.2-linux64.tar.gz -C /usr/local/bin && \
     chmod +x /usr/local/bin/geckodriver && \
     rm geckodriver-v0.32.2-linux64.tar.gz
-
-#RUN GECKODRIVER_VERSION=`curl https://github.com/mozilla/geckodriver/releases/latest | grep -Po 'v[0-9]+.[0-9]+.[0-9]+'` && \
-#    wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz && \
-#    tar -zxf geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz -C /usr/local/bin && \
-#    chmod +x /usr/local/bin/geckodriver && \
-#    rm geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz
 
 RUN FIREFOX_SETUP=firefox-setup.tar.bz2 && \
     apt-get purge firefox && \
@@ -33,10 +26,11 @@ ENV PYTHONUNBUFFERED=1
 
 ENV APP_HOME /usr/src/app
 WORKDIR /$APP_HOME
-VOLUME ./volume:/usr/src/app/volume
-COPY ["./containers/yandex_parser", "/usr/src/app"]
-COPY ["./volume", "/usr/src/app/volume"]
-
+VOLUME ./data:/usr/src/app/data
+COPY ["./containers/yandex_parser/my_modules", "/usr/src/app/my_modules"]
+COPY ["./containers/yandex_parser/app.py", "/usr/src/app/app.py"]
+COPY ["./containers/yandex_parser/parser_requirements.txt", "/usr/src/app/parser_requirements.txt"]
+RUN mkdir -p /usr/src/app/data/logs
 RUN python3 -m pip install --upgrade pip
 RUN pip3 install -r parser_requirements.txt
 

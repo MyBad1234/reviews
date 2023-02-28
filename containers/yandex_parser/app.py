@@ -9,7 +9,7 @@ logging.getLogger().setLevel(logging.INFO)
 def run():
     sql = query_sql.connect()
     if (sql):
-        queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['find_yandex_reviews'])
+        queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
         if (queue):
             try:
                 #Если есть задача - присваиваем статус "в работе"
