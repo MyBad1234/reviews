@@ -62,7 +62,7 @@ def getFindFilialQueue(sql, type_id):
 def getProxy(sql):
     if (sql):
         with sql.cursor() as cursor:
-            cursor.execute("SELECT `ip`, `login`, `password`, `id` FROM `proxy` WHERE `date_off` > "+str(time.time())+" ORDER BY `last_active` ASC LIMIT 1")
+            cursor.execute("SELECT `ip`, `login`, `password`, `id` FROM `proxy` WHERE `date_off` > "+str(int(time.time()))+" ORDER BY `last_active` ASC LIMIT 1")
             proxy = cursor.fetchone()
             sql.commit()
             if (proxy):
@@ -99,7 +99,7 @@ def newQueue(sql, entity_id, resource_id, type_id):
     if (sql):
         with sql.cursor() as cursor:
             query = "INSERT INTO `queue` (`entity_id`, `resource_id`, `type_id`, `status_id`, `created`, `updated`) values (%s,%s,%s,%s,%s,%s)"
-            cursor.execute(query, (str(entity_id), str(resource_id), str(type_id), str(STATUS['created']), str(time.time()), str(time.time())))
+            cursor.execute(query, (str(entity_id), str(resource_id), str(type_id), str(STATUS['created']), str(int(time.time())), str(int(time.time()))))
             sql.commit()
 
 #Записать значение
@@ -117,20 +117,20 @@ def newSaveFilialQueue(sql, entity_id, resource_id):
 #Ставим статус задачи - "новый"
 def statusCreated(sql, queue_id):
     setValue(sql, 'queue', 'status_id', str(STATUS['created']), 'id='+str(queue_id))
-    setValue(sql, 'queue', 'updated', str(time.time()), 'id='+str(queue_id))
+    setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
     
 #Ставим статус задачи - "в работе"
 def statusInProcess(sql, queue_id):
     setValue(sql, 'queue', 'status_id', str(STATUS['in_process']), 'id='+str(queue_id))
-    setValue(sql, 'queue', 'updated', str(time.time()), 'id='+str(queue_id))
+    setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
 
 #Ставим статус задачи - "готово"
 def statusDone(sql, queue_id):
     setValue(sql, 'queue', 'status_id', str(STATUS['done']), 'id='+str(queue_id))
-    setValue(sql, 'queue', 'updated', str(time.time()), 'id='+str(queue_id))
+    setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
     
 #Ставим статус задачи - "ошибка"
 def statusError(sql, queue_id, error_text):
     setValue(sql, 'queue', 'status_id', str(STATUS['error']), 'id='+str(queue_id))
     setValue(sql, 'queue', 'error_log', json.dumps(error_text, ensure_ascii=False), 'id='+str(queue_id))
-    setValue(sql, 'queue', 'updated', str(time.time()), 'id='+str(queue_id))
+    setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
