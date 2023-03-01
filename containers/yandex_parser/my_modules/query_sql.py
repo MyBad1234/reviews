@@ -44,6 +44,7 @@ def connect():
     
 #Получить задание из очереди
 def getFindFilialQueue(sql, type_id):
+    sql = checkConnect(sql)
     if (sql):
         with sql.cursor() as cursor:
             cursor.execute("SELECT `id`, `resource_id` FROM `queue` WHERE `status_id` = "+str(STATUS['created'])+" AND `type_id`= "+str(type_id)+" ORDER BY `created` ASC, `priority` ASC LIMIT 1")
@@ -60,6 +61,7 @@ def getFindFilialQueue(sql, type_id):
             
 #Получить прокси
 def getProxy(sql):
+    sql = checkConnect(sql)
     if (sql):
         with sql.cursor() as cursor:
             cursor.execute("SELECT `ip`, `login`, `password`, `id` FROM `proxy` WHERE `date_off` > "+str(int(time.time()))+" ORDER BY `last_active` ASC LIMIT 1")
@@ -78,6 +80,7 @@ def getProxy(sql):
             
 #Получить URL на яндекс картах
 def getYandexUrl(sql, resource_id):
+    sql = checkConnect(sql)
     if (sql):
         with sql.cursor() as cursor:
             cursor.execute("SELECT `yandex_url` FROM `itemcampagin` WHERE id ="+str(resource_id))
@@ -87,6 +90,7 @@ def getYandexUrl(sql, resource_id):
         
 #Добавить результат
 def addResult(sql, queue_id, data):
+    sql = checkConnect(sql)
     if (sql):
         with sql.cursor() as cursor:
             query = "INSERT INTO `queue_reviews_in_filial` (`queue_id`, `data`) values (%s,%s)"
@@ -96,6 +100,7 @@ def addResult(sql, queue_id, data):
 
 #Создать новую задачу
 def newQueue(sql, entity_id, resource_id, type_id):
+    sql = checkConnect(sql)
     if (sql):
         with sql.cursor() as cursor:
             query = "INSERT INTO `queue` (`entity_id`, `resource_id`, `type_id`, `status_id`, `created`, `updated`) values (%s,%s,%s,%s,%s,%s)"
@@ -104,6 +109,7 @@ def newQueue(sql, entity_id, resource_id, type_id):
 
 #Записать значение
 def setValue(sql, table, column, value, where):
+    sql = checkConnect(sql)
     if (sql):
         with sql.cursor() as cursor:
             query = "UPDATE "+table+" set "+column+" = '"+value+"' WHERE "+where
@@ -112,25 +118,42 @@ def setValue(sql, table, column, value, where):
          
 #Создать новую задачу "Сохранить отзывы"
 def newSaveFilialQueue(sql, entity_id, resource_id):
-    newQueue(sql, entity_id, resource_id, TYPE['save_reviews'])
+    sql = checkConnect(sql)
+    if (sql):
+        newQueue(sql, entity_id, resource_id, TYPE['save_reviews'])
     
 #Ставим статус задачи - "новый"
 def statusCreated(sql, queue_id):
-    setValue(sql, 'queue', 'status_id', str(STATUS['created']), 'id='+str(queue_id))
-    setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
+    sql = checkConnect(sql)
+    if (sql):
+        setValue(sql, 'queue', 'status_id', str(STATUS['created']), 'id='+str(queue_id))
+        setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
     
 #Ставим статус задачи - "в работе"
 def statusInProcess(sql, queue_id):
-    setValue(sql, 'queue', 'status_id', str(STATUS['in_process']), 'id='+str(queue_id))
-    setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
+    sql = checkConnect(sql)
+    if (sql):
+        setValue(sql, 'queue', 'status_id', str(STATUS['in_process']), 'id='+str(queue_id))
+        setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
 
 #Ставим статус задачи - "готово"
 def statusDone(sql, queue_id):
-    setValue(sql, 'queue', 'status_id', str(STATUS['done']), 'id='+str(queue_id))
-    setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
+    sql = checkConnect(sql)
+    if (sql):
+        setValue(sql, 'queue', 'status_id', str(STATUS['done']), 'id='+str(queue_id))
+        setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
     
 #Ставим статус задачи - "ошибка"
 def statusError(sql, queue_id, error_text):
-    setValue(sql, 'queue', 'status_id', str(STATUS['error']), 'id='+str(queue_id))
-    setValue(sql, 'queue', 'error_log', json.dumps(error_text, ensure_ascii=False), 'id='+str(queue_id))
-    setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
+    sql = checkConnect(sql)
+    if (sql):
+        setValue(sql, 'queue', 'status_id', str(STATUS['error']), 'id='+str(queue_id))
+        setValue(sql, 'queue', 'error_log', json.dumps(error_text, ensure_ascii=False), 'id='+str(queue_id))
+        setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
+
+#Проверяем sql соединение, и возобновляем если оно потеряно 
+def checkConnect(sql):
+    if (sql.open):
+        return sql
+    else:
+        return connect()
