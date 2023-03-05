@@ -9,7 +9,7 @@ import time
 import datetime
 
 #Заходим на страницу
-def loadPage(sql, yandex_url):
+def loadPage(yandex_url):
     display = Display(visible=0, size=(800, 600))
     display.start()
     logging.info('Initialized virtual display..')
@@ -37,7 +37,7 @@ def loadPage(sql, yandex_url):
                 time.sleep(5)
                 result = browser.page_source
     browser.quit()
-    display.stop()
+    #display.stop()
     if 'result' in locals():
         return result
 
@@ -46,14 +46,12 @@ def getAutor(review):
     div_autor = review.find(attrs={"class":{"business-review-view__author"}})
     if (div_autor):
         name = review.find(attrs={"itemprop":{"name"}})
-        if name:
-            if 0 in name.contents:
-                return name.contents[0]
-            else:
-                return False
+        if (name.contents):
+            return name.contents[0]
         else:
             return False
-    return False
+    else:
+        return False
 
 #Получить рейтинг
 def getRating(review):
@@ -77,7 +75,7 @@ def getDate(review):
 def getText(review):
     text = review.find(attrs={"class":{"business-review-view__body-text"}})
     if (text):
-        if 0 in text.contents:
+        if (text.contents):
             return text.contents[0]
         else:
             return ''

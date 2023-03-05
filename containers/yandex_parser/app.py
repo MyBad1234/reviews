@@ -17,7 +17,7 @@ def run():
                 yandex_url = query_sql.getYandexUrl(sql, queue['resource_id'])
                 if (yandex_url):
                     #Получаем страницу
-                    html = parser.loadPage(sql, yandex_url)
+                    html = parser.loadPage(yandex_url)
                     if (html):
                         #Парсим данные
                         result = parser.grap(html)

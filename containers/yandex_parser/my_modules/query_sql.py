@@ -148,7 +148,7 @@ def statusError(sql, queue_id, error_text):
     sql = checkConnect(sql)
     if (sql):
         setValue(sql, 'queue', 'status_id', str(STATUS['error']), 'id='+str(queue_id))
-        setValue(sql, 'queue', 'error_log', json.dumps(error_text, ensure_ascii=False), 'id='+str(queue_id))
+        #setValue(sql, 'queue', 'error_log', str(json.dumps(error_text, ensure_ascii=False)), 'id='+str(queue_id))
         setValue(sql, 'queue', 'updated', str(int(time.time())), 'id='+str(queue_id))
 
 #Проверяем sql соединение, и возобновляем если оно потеряно 
