@@ -10,8 +10,9 @@ import datetime
 
 #Заходим на страницу
 def loadPage(yandex_url):
-    display = Display(visible=0, size=(800, 600))
-    display.start()
+    logging.info('Start Load Page..')
+    #display = Display(visible=0, size=(800, 600))
+    #display.start()
     logging.info('Initialized virtual display..')
     options = FirefoxOptions()
     options.add_argument('--headless')
@@ -19,6 +20,7 @@ def loadPage(yandex_url):
     options.add_argument("--disable-gpu")
 
     browser = webdriver.Firefox(options=options)
+    logging.info('Initialized webdriver..')
     if (browser):
         browser.get(yandex_url+'/reviews')
         time.sleep(5)
