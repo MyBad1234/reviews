@@ -5,3 +5,8 @@ __pycache__/
 *.so
 venv
 volume/logs/*
+
+.idea/
+test.py
+geckodriver.log
+containers/yandex_parser/geckodriver.log

@@ -1,59 +1,122 @@
-import logging
 import time
 import json
+import requests
+import pymysql
+import logging
 from my_modules import query_sql, parser, logger
+from my_modules.exceptions import ProxyError
 from selenium.common.exceptions import WebDriverException
 
 logging.getLogger().setLevel(logging.INFO)
 
+
+# for test sqlalchemy
+import sqlalchemy
+
+
+def send_message_tg(obj: dict):
+    """send message to tg"""
+
+    row_tg = f"Автор: { obj.get('author') } \n Комментарий: { obj.get('text') }"
+
+    requests.post("https://api.telegram.org/bot6375874152:AAFRUb5i30qQPxvDMUuaRTybmCSssCJzgiY/sendMessage",
+                  json={"chat_id": -961408363, "text": row_tg})
+
+
 def run():
-    sql = query_sql.connect()
-    if (sql):
-        queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        if (queue):
+    print('it is start')
+
+    # connect to db
+    try:
+        sql = query_sql.connect()
+    except pymysql.err.OperationalError:
+        print('Error: failed to connect to the database')
+        time.sleep(30)
+
+        return
+
+    if sql:
+        sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
+
+        if queue:
+            print(queue)
             try:
-                #Если есть задача - присваиваем статус "в работе"
-                query_sql.statusInProcess(sql, queue['queue_id'])
-                yandex_url = query_sql.getYandexUrl(sql, queue['resource_id'])
-                if (yandex_url):
-                    #Получаем страницу
-                    html = parser.loadPage(yandex_url)
-                    if (html):
-                        #Парсим данные
+                # get proxy
+                sql, proxy_dict = query_sql.get_proxy(sql)
+
+                # Если есть задача - присваиваем статус "в работе"
+                sql = query_sql.statusInProcess(sql, queue['queue_id'])
+                sql, yandex_url = query_sql.getYandexUrl(sql, queue['resource_id'])
+                if yandex_url:
+                    # Получаем страницу
+                    html = parser.loadPage(yandex_url, {'ip': proxy_dict[0], 'port': '1050'})
+                    if html:
+                        # Парсим данные
                         result = parser.grap(html)
-                        if (result):
-                            #Преобразуем в json
+                        if result:
+                            # Преобразуем в json
                             json_string = json.dumps(result, ensure_ascii=False)
-                            if (json_string):
-                                #Если получили json статус задачи "готово"
-                                query_sql.statusDone(sql, queue['queue_id'])
-                                #Получаем id записи результата
-                                result_id = query_sql.addResult(sql, queue['queue_id'], json_string)
-                                #Создаём задачу на сохранение отзывов
-                                query_sql.newSaveFilialQueue(sql, entity_id=queue['resource_id'], resource_id=result_id)
+                            if json_string:
+                                # Если получили json статус задачи "готово"
+                                sql = query_sql.statusDone(sql, queue['queue_id'])
+                                # Получаем id записи результата
+                                sql, result_id = query_sql.add_result(sql, queue['queue_id'], result)
+                                # Создаём задачу на сохранение отзывов
+                                sql, result_id = query_sql.newSaveFilialQueue(sql, entity_id=queue['resource_id'],
+                                                                              resource_id=result_id)
+
+                                # control count of reviews
+                                sql = query_sql.control_count_json(sql, queue['queue_id'])
                             else:
-                                query_sql.statusError(sql, queue['queue_id'], 'Ошибка получения json')
+                                sql = query_sql.statusError(sql, queue['queue_id'], 'Ошибка получения json')
                         else:
                             logger.errorLog("Ошибка в парсере")
-                            query_sql.statusError(sql, queue['queue_id'], 'Не получены данные со страницы')
+                            sql = query_sql.statusError(sql, queue['queue_id'], 'Не получены данные со страницы')
                     else:
                         logger.errorLog("Не получена страница")
-                        query_sql.statusError(sql, queue['queue_id'], 'Не получена страница')
+                        sql = query_sql.statusError(sql, queue['queue_id'], 'Не получена страница')
                 else:
-                    query_sql.statusError(sql, queue['queue_id'], 'Нет URL филиала')
-            #Если получили ошибку драйвера, данная задача получает статус новой и делаем паузу 10 минут
-            except WebDriverException:
-                if (queue['queue_id']):
-                    query_sql.statusCreated(sql, queue['queue_id'])
-            except Exception as error:
-                if (queue['queue_id']):
-                    error_text = "Ошибка:"+str(repr(error))
-                    logger.errorLog(error_text)
-                    query_sql.statusError(sql, queue['queue_id'], error_text)
+                    sql = query_sql.statusError(sql, queue['queue_id'], 'Нет URL филиала')
+
+            # Если получили ошибку драйвера, данная задача получает статус новой и делаем паузу 10 минут
+            # except WebDriverException:
+            #    if queue['queue_id']:
+            #        sql = query_sql.statusCreated(sql, queue['queue_id'])
+
+            except ProxyError:
+                print('proxy error')
+                time.sleep(300)
+
+            #except Exception as error:
+            #    if queue['queue_id']:
+            #        error_text = "Ошибка:"+str(repr(error))
+            #        logger.errorLog(error_text)
+            #        query_sql.statusError(sql, queue['queue_id'], error_text)
+
         else:
             print('пауза')
             time.sleep(300)
         sql.close()
+
+
+def test():
+    engine = sqlalchemy.create_engine(
+        "mysql+pymysql://nikrbk_geo_test:zuJDfrKYLzbvnNs3V6PB@nikrbk.beget.tech/nikrbk_geo_test", echo=True)
+
+    metadata_obj = sqlalchemy.MetaData()
+    data_table = sqlalchemy.Table(
+        'queue_reviews_in_filial',
+        metadata_obj,
+        sqlalchemy.Column('queue_id', sqlalchemy.Integer),
+        sqlalchemy.Column('data', sqlalchemy.JSON)
+    )
+
+    with engine.connect() as conn:
+        stmp = sqlalchemy.insert(data_table).values(queue_id=109959, data={'lol': '\nlol"'})
+        conn.execute(stmp)
+
+        conn.commit()
+
 
 while True:
     run()

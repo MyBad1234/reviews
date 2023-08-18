@@ -8,18 +8,104 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import time
 import datetime
 
-#Заходим на страницу
-def loadPage(yandex_url):
+
+def replace_symbols(data_arr: list):
+    """work with ' symbols """
+
+    new_arr = []
+
+    for i in data_arr:
+        obj = {
+            'author': i.get('author').replace('"', "'").replace('\n', '\\n'),
+            'rating': i.get('rating'),
+            'date': i.get('date'),
+            'text': i.get('text').replace('"', "'").replace('\n', '\\n'),
+            'answer': i.get('answer'),
+        }
+        try:
+            obj.update({
+                'answer_text': i.get('answer_text').replace('"', "'").replace('\n', '\\n')
+            })
+        except AttributeError:
+            obj.update({
+                'answer_text': i.get('answer_text')
+            })
+
+        new_arr.append(obj)
+
+    return new_arr
+
+
+def get_all_reviews(browser: webdriver.Firefox, for_loading=0, for_now=0):
+    """get all reviews with answer"""
+
+    # get all elements with review
+    review_elements = browser.find_elements(
+        by=By.CSS_SELECTOR, value='.business-reviews-card-view__review'
+    )
+
+    # parse elements
+    for_js = 0
+    for i in review_elements:
+        if for_js >= for_now:
+
+            # scroll to review
+            browser.execute_script("document.querySelectorAll('.business-reviews-card-view__review')"
+                                   "[" + str(for_js) + "].scrollIntoView({block: 'center'})")
+
+            # control answer
+            answer_is_present = browser.execute_script("return document.querySelectorAll('"
+                                                       ".business-reviews-card-view__review')"
+                                                       "[" + str(for_js) + "].querySelector('"
+                                                       ".business-review-view__reactions-container')"
+                                                       ".children.length")
+
+            if answer_is_present == 2:
+
+                # find btn for get answer and click to it
+                all_div = i.find_element(by=By.CSS_SELECTOR, value='.business-review-view__reactions-container') \
+                    .find_elements(by=By.CSS_SELECTOR, value='div')
+
+                for j in all_div:
+                    correct_div = j
+
+                correct_div.click()
+
+        if (for_js % 10) == 0:
+            time.sleep(2)
+
+        for_js += 1
+
+    # control count
+    time.sleep(3)
+
+    review_elements = browser.find_elements(
+        by=By.CSS_SELECTOR, value='.business-reviews-card-view__review'
+    )
+
+    count_elements = 0
+    for i in review_elements:
+        count_elements += 1
+
+    if for_loading != count_elements:
+        get_all_reviews(browser, count_elements, for_js)
+
+
+# Заходим на страницу
+def loadPage(yandex_url, proxy: dict):
     logging.info('Start Load Page..')
     #display = Display(visible=0, size=(800, 600))
     #display.start()
     logging.info('Initialized virtual display..')
-    options = FirefoxOptions()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument("--disable-gpu")
+    options = webdriver.ChromeOptions()
 
-    browser = webdriver.Firefox(options=options)
+    # set proxy
+    # proxy_str = proxy.get('ip') + ':' + proxy.get('port')
+    # options.add_argument('--proxy-server=%s' % proxy_str)
+
+    browser = webdriver.Chrome()
+
+
     logging.info('Initialized webdriver..')
     if (browser):
         browser.get(yandex_url+'/reviews')
@@ -37,6 +123,10 @@ def loadPage(yandex_url):
                         option.click()
                         break
                 time.sleep(5)
+
+                # get all reviews
+                get_all_reviews(browser)
+
                 result = browser.page_source
     browser.quit()
     #display.stop()
@@ -55,7 +145,17 @@ def getAutor(review):
     else:
         return False
 
-#Получить рейтинг
+
+def get_answer_text(review):
+    div_answer = review.find(attrs={"class":{"business-review-comment__bubble"}})
+
+    if div_answer:
+        return div_answer.text
+    else:
+        return False
+
+
+# Получить рейтинг
 def getRating(review):
     ratingValue = review.find(attrs={"itemprop":{"ratingValue"}})
     if (ratingValue):
@@ -108,6 +208,9 @@ def grap(html):
                         'date': getDate(review),
                         'text': getText(review),
                         'answer': checkAnswer(review),
+                        'answer_text': get_answer_text(review)
                     }
                     results.append(info)
-    return results
+
+    return replace_symbols(results)
+
