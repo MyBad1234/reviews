@@ -37,6 +37,7 @@ def run():
 
     if sql:
         sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
+        # queue = {'queue_id': 114839, 'resource_id': 1936}
 
         if queue:
             print(queue)
@@ -79,19 +80,19 @@ def run():
                     sql = query_sql.statusError(sql, queue['queue_id'], 'Нет URL филиала')
 
             # Если получили ошибку драйвера, данная задача получает статус новой и делаем паузу 10 минут
-            # except WebDriverException:
-            #    if queue['queue_id']:
-            #        sql = query_sql.statusCreated(sql, queue['queue_id'])
+            except WebDriverException:
+               if queue['queue_id']:
+                   sql = query_sql.statusCreated(sql, queue['queue_id'])
 
             except ProxyError:
                 print('proxy error')
                 time.sleep(300)
 
-            #except Exception as error:
-            #    if queue['queue_id']:
-            #        error_text = "Ошибка:"+str(repr(error))
-            #        logger.errorLog(error_text)
-            #        query_sql.statusError(sql, queue['queue_id'], error_text)
+            except Exception as error:
+                if queue['queue_id']:
+                    error_text = "Ошибка:"+str(repr(error))
+                    logger.errorLog(error_text)
+                    query_sql.statusError(sql, queue['queue_id'], error_text)
 
         else:
             print('пауза')
