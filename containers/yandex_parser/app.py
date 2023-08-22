@@ -82,7 +82,7 @@ def run():
             # Если получили ошибку драйвера, данная задача получает статус новой и делаем паузу 10 минут
             except WebDriverException:
                if queue['queue_id']:
-                   sql = query_sql.statusCreated(sql, queue['queue_id'])
+                   sql = query_sql.statusError(sql, queue['queue_id'], 'hz')
 
             except ProxyError:
                 print('proxy error')
@@ -90,7 +90,7 @@ def run():
 
             except Exception as error:
                 if queue['queue_id']:
-                    error_text = "Ошибка:"+str(repr(error))
+                    error_text = "Ошибка:" + str(repr(error))
                     logger.errorLog(error_text)
                     query_sql.statusError(sql, queue['queue_id'], error_text)
 
