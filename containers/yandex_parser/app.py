@@ -17,29 +17,31 @@ import sqlalchemy
 logging.getLogger().setLevel(logging.INFO)
 
 
-def send_message_tg(company_yandex_url: str, datetime_work: datetime.datetime):
+def send_message_tg(datetime_work, company_yandex_url, filial_id, company_name):
     """send message to tg"""
 
     # init tg variables
     token = os.environ.get('TG_BOT')
     chat = os.environ.get('TG_CHAT')
 
+    row_tg = f"Ошибка при получении отзывов \n"
+
+    if company_name is not None:
+        row_tg += f"Название комании: {str(company_name)} \n"
+
+    if filial_id is not None:
+        row_tg += f"Филиал: {str(filial_id)} \n"
+
     if company_yandex_url is not None:
-        # get part of url
-        part_url = company_yandex_url.split('yandex.ru')[1]
+        row_tg += f"Ссылка на yandex карты: {str(company_yandex_url)} \n"
 
-        row_tg = (f"Ошибка при получении отзывов \n"
-                  f"Компания: { part_url } \n"
-                  f"Дата и время: { datetime_work }")
+    if filial_id is not None:
+        url = 'https://test.geoadv.ru/itemcampagin/view?id=' + str(filial_id)
+        row_tg += f"Ссылка на профиль: {url} \n"
 
-    else:
-        row_tg = (f"Ошибка при получении отзывов \n"
-                  f"Дата и время: {datetime_work}")
-
+    row_tg += f"Дата и время: {datetime_work}"
     requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
                   json={"chat_id": chat, "text": row_tg})
-
-
 
 
 def run():
@@ -57,12 +59,15 @@ def run():
         return
 
     yandex_url = None
+    organization = None
+    id_filial = None
 
     if sql:
         sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        # queue = {'queue_id': 114973, 'resource_id': 2575}
+        # queue = {'queue_id': 115582, 'resource_id': 2374}
 
         if queue:
+            id_filial = queue.get('resource_id')
             print(queue)
             try:
                 # get proxy
@@ -70,7 +75,8 @@ def run():
 
                 # Если есть задача - присваиваем статус "в работе"
                 sql = query_sql.statusInProcess(sql, queue['queue_id'])
-                sql, yandex_url = query_sql.getYandexUrl(sql, queue['resource_id'])
+                sql, yandex_url, organization = query_sql.getYandexUrl(sql, queue['resource_id'])
+
                 if yandex_url:
                     # Получаем страницу
                     html = parser.loadPage(yandex_url, {'ip': proxy_dict[0], 'port': '1050'})
@@ -119,7 +125,7 @@ def run():
                     query_sql.statusError(sql, queue['queue_id'], error_text)
 
                 # send message
-                send_message_tg(yandex_url, dt_now)
+                send_message_tg(dt_now, yandex_url, id_filial, organization)
 
         else:
             print('пауза')

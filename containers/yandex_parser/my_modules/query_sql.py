@@ -213,11 +213,11 @@ def get_proxy(sql):
 #Получить URL на яндекс картах
 def getYandexUrl(sql, resource_id):
 
-    query = "SELECT `yandex_url` FROM `itemcampagin` WHERE id = %s"
+    query = "SELECT `name`, `yandex_url` FROM `itemcampagin` WHERE id = %s"
     query = query % (str(resource_id), )
 
     sql, data = select_query(sql, query)
-    return sql, data[0]
+    return sql, data[1], data[0]
 
 
 def newQueue(sql, entity_id, resource_id, type_id):
