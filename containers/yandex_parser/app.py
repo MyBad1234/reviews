@@ -25,7 +25,7 @@ def send_message_tg(company_yandex_url: str):
     chat = os.environ.get('TG_CHAT')
 
     # get part of url
-    part_url = company_yandex_url.split('yandex.ru')
+    part_url = company_yandex_url.split('yandex.ru')[1]
 
     row_tg = (f"Ошибка при получении отзывов \n"
               f"Компания: { part_url } \n"
@@ -51,7 +51,7 @@ def run():
 
     if sql:
         sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        # queue = {'queue_id': 114849, 'resource_id': 1946}
+        # queue = {'queue_id': 114973, 'resource_id': 2575}
 
         if queue:
             print(queue)
