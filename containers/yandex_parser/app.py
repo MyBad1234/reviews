@@ -1,8 +1,11 @@
+import os
 import time
 import json
 import requests
 import pymysql
 import logging
+import traceback
+import datetime
 from my_modules import query_sql, parser, logger
 from my_modules.exceptions import ProxyError
 from selenium.common.exceptions import WebDriverException
@@ -14,13 +17,18 @@ logging.getLogger().setLevel(logging.INFO)
 import sqlalchemy
 
 
-def send_message_tg(obj: dict):
+def send_message_tg(company_yandex_url: str):
     """send message to tg"""
 
-    row_tg = f"Автор: { obj.get('author') } \n Комментарий: { obj.get('text') }"
+    token = os.environ.get('TG_BOT')
+    chat = os.environ.get('TG_CHAT')
 
-    requests.post("https://api.telegram.org/bot6375874152:AAFRUb5i30qQPxvDMUuaRTybmCSssCJzgiY/sendMessage",
-                  json={"chat_id": -961408363, "text": row_tg})
+    row_tg = (f"Ошибка при получении отзывов \n"
+              f"Компания: { company_yandex_url } \n"
+              f"Дата и время: { datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S') }")
+
+    requests.post(f"https://api.telegram.org/bot{ token }/sendMessage",
+                  json={"chat_id": chat, "text": row_tg})
 
 
 def run():
@@ -35,9 +43,11 @@ def run():
 
         return
 
+    yandex_url = None
+
     if sql:
         sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        # queue = {'queue_id': 114839, 'resource_id': 1936}
+        # queue = {'queue_id': 114849, 'resource_id': 1946}
 
         if queue:
             print(queue)
@@ -89,15 +99,24 @@ def run():
                 time.sleep(300)
 
             except Exception as error:
+                print(traceback.format_exc())
                 if queue['queue_id']:
                     error_text = "Ошибка:" + str(repr(error))
                     logger.errorLog(error_text)
                     query_sql.statusError(sql, queue['queue_id'], error_text)
 
+                # send message
+                if yandex_url:
+                    send_message_tg(yandex_url)
+
         else:
             print('пауза')
             time.sleep(300)
-        sql.close()
+
+        try:
+            sql.close()
+        except pymysql.err.Error:
+            pass
 
 
 def test():
