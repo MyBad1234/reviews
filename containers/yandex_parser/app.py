@@ -2,6 +2,7 @@ import os
 import time
 import json
 import requests
+import datetime
 import pymysql
 import logging
 import traceback
@@ -10,33 +11,41 @@ from my_modules import query_sql, parser, logger
 from my_modules.exceptions import ProxyError
 from selenium.common.exceptions import WebDriverException
 
-logging.getLogger().setLevel(logging.INFO)
-
-
 # for test sqlalchemy
 import sqlalchemy
 
+logging.getLogger().setLevel(logging.INFO)
 
-def send_message_tg(company_yandex_url: str):
+
+def send_message_tg(company_yandex_url: str, datetime_work: datetime.datetime):
     """send message to tg"""
 
     # init tg variables
     token = os.environ.get('TG_BOT')
     chat = os.environ.get('TG_CHAT')
 
-    # get part of url
-    part_url = company_yandex_url.split('yandex.ru')[1]
+    if company_yandex_url is not None:
+        # get part of url
+        part_url = company_yandex_url.split('yandex.ru')[1]
 
-    row_tg = (f"Ошибка при получении отзывов \n"
-              f"Компания: { part_url } \n"
-              f"Дата и время: { datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S') }")
+        row_tg = (f"Ошибка при получении отзывов \n"
+                  f"Компания: { part_url } \n"
+                  f"Дата и время: { datetime_work }")
 
-    requests.post(f"https://api.telegram.org/bot{ token }/sendMessage",
+    else:
+        row_tg = (f"Ошибка при получении отзывов \n"
+                  f"Дата и время: {datetime_work}")
+
+    requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
                   json={"chat_id": chat, "text": row_tg})
+
+
 
 
 def run():
     print('it is start')
+    dt_now = datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+    print(dt_now)
 
     # connect to db
     try:
@@ -110,8 +119,7 @@ def run():
                     query_sql.statusError(sql, queue['queue_id'], error_text)
 
                 # send message
-                if yandex_url:
-                    send_message_tg(yandex_url)
+                send_message_tg(yandex_url, dt_now)
 
         else:
             print('пауза')
