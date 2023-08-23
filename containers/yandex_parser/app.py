@@ -20,11 +20,15 @@ import sqlalchemy
 def send_message_tg(company_yandex_url: str):
     """send message to tg"""
 
+    # init tg variables
     token = os.environ.get('TG_BOT')
     chat = os.environ.get('TG_CHAT')
 
+    # get part of url
+    part_url = company_yandex_url.split('yandex.ru')
+
     row_tg = (f"Ошибка при получении отзывов \n"
-              f"Компания: { company_yandex_url } \n"
+              f"Компания: { part_url } \n"
               f"Дата и время: { datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S') }")
 
     requests.post(f"https://api.telegram.org/bot{ token }/sendMessage",
