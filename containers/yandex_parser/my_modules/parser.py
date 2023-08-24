@@ -100,8 +100,8 @@ def loadPage(yandex_url, proxy: dict):
     options = webdriver.ChromeOptions()
 
     # set proxy
-    proxy_str = proxy.get('ip') + ':' + proxy.get('port')
-    options.add_argument('--proxy-server=%s' % proxy_str)
+    # proxy_str = proxy.get('ip') + ':' + proxy.get('port')
+    # options.add_argument('--proxy-server=%s' % proxy_str)
 
     browser = webdriver.Chrome(options=options)
 

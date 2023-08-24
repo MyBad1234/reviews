@@ -63,8 +63,8 @@ def run():
     id_filial = None
 
     if sql:
-        sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        # queue = {'queue_id': 115582, 'resource_id': 2374}
+        # sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
+        queue = {'queue_id': 115068, 'resource_id': 2670}
 
         if queue:
             id_filial = queue.get('resource_id')
@@ -125,7 +125,7 @@ def run():
                     query_sql.statusError(sql, queue['queue_id'], error_text)
 
                 # send message
-                send_message_tg(dt_now, yandex_url, id_filial, organization)
+                # send_message_tg(dt_now, yandex_url, id_filial, organization)
 
         else:
             print('пауза')
@@ -143,7 +143,7 @@ def test():
 
     metadata_obj = sqlalchemy.MetaData()
     data_table = sqlalchemy.Table(
-        'queue_reviews_in_filial',
+        'queue_yandex_reviews_in_filial',
         metadata_obj,
         sqlalchemy.Column('queue_id', sqlalchemy.Integer),
         sqlalchemy.Column('data', sqlalchemy.JSON)
@@ -156,5 +156,4 @@ def test():
         conn.commit()
 
 
-while True:
-    run()
+run()

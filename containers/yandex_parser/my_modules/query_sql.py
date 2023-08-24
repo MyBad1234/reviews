@@ -42,9 +42,9 @@ DB_CHARSET = 'utf8mb4'
 
 
 def control_count_json(sql, id_result_db: int):
-    """control count of JSON objects in queue_reviews_in_filial"""
+    """control count of JSON objects in queue_yandex_reviews_in_filial"""
 
-    query = "SELECT data FROM queue_reviews_in_filial WHERE queue_id = %s"
+    query = "SELECT data FROM queue_yandex_reviews_in_filial WHERE queue_id = %s"
     query = query % (str(id_result_db), )
 
     sql, data = select_query(sql, query)
@@ -129,7 +129,7 @@ def insert_query(sql: pymysql.connections.Connection, query: str, attempt=0, clo
     return sql, update_id
 
 
-def add_result(sql, queue_id, data):
+def add_result(sql, queue_id, data_json):
     """Добавить результат (Боря)"""
 
     # connect to db from sqlalchemy
@@ -141,21 +141,31 @@ def add_result(sql, queue_id, data):
     # model for db
     metadata_obj = sqlalchemy.MetaData()
     data_model = sqlalchemy.Table(
-        'queue_reviews_in_filial',
+        'queue_yandex_reviews_in_filial',
         metadata_obj,
         sqlalchemy.Column('queue_id', sqlalchemy.Integer),
         sqlalchemy.Column('data', sqlalchemy.JSON)
     )
 
-    # save json-data
     with engine.connect() as conn:
-        query = sqlalchemy.insert(data_model).values(queue_id=queue_id, data=data)
+        # control duplicate data
+        query = sqlalchemy.select(data_model).where(data_model.c.data == data_json)
+
+        for_duplicate = False
+        for i in conn.execute(query):
+            for_duplicate = True
+
+        # insert data to db
+        if for_duplicate:
+            query = sqlalchemy.insert(data_model).values(queue_id=queue_id, data=None)
+        else:
+            query = sqlalchemy.insert(data_model).values(queue_id=queue_id, data=data_json)
         conn.execute(query)
 
         conn.commit()
 
     # get id
-    query = "SELECT id FROM queue_reviews_in_filial WHERE queue_id = %s"
+    query = "SELECT id FROM queue_yandex_reviews_in_filial WHERE queue_id = %s"
     query = query % (str(queue_id))
 
     sql, id_insert = select_query(sql, query)
@@ -274,7 +284,8 @@ def statusError(sql, queue_id, error_text):
 
     return new_sql
 
-#Проверяем sql соединение, и возобновляем если оно потеряно 
+
+# Проверяем sql соединение, и возобновляем если оно потеряно
 def checkConnect(sql):
     if (sql.open):
         return sql
