@@ -125,7 +125,7 @@ def run():
                     query_sql.statusError(sql, queue['queue_id'], error_text)
 
                 # send message
-                # send_message_tg(dt_now, yandex_url, id_filial, organization)
+                send_message_tg(dt_now, yandex_url, id_filial, organization)
 
         else:
             print('пауза')
@@ -156,4 +156,5 @@ def test():
         conn.commit()
 
 
-run()
+while True:
+    run()
