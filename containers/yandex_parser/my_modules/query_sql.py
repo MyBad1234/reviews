@@ -56,6 +56,23 @@ def control_count_json(sql, id_result_db: int):
     return sql
 
 
+def repeat_filial(sql, filial_id):
+    """control count of filial in db"""
+
+    # make query
+    query = "SELECT * FROM queue WHERE status_id = %s AND type_id = %s AND resource_id = %s"
+    query = query % (str(STATUS.get('done')), str(TYPE.get('python_parser')), str(filial_id))
+
+    # get data
+    sql, data_from_query = select_query(sql, query)
+
+    # control count
+    if data_from_query is not None:
+        return sql, True
+
+    return sql, False
+
+
 # connect to db
 def connect():
     print('new connection')
@@ -143,34 +160,42 @@ def add_result(sql, queue_id, data_json):
     data_model = sqlalchemy.Table(
         'queue_yandex_reviews_in_filial',
         metadata_obj,
+        sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
         sqlalchemy.Column('queue_id', sqlalchemy.Integer),
-        sqlalchemy.Column('data', sqlalchemy.JSON)
+        sqlalchemy.Column('data', sqlalchemy.JSON, nullable=True)
     )
 
     with engine.connect() as conn:
-        # control duplicate data
-        query = sqlalchemy.select(data_model).where(data_model.c.data == data_json)
+        # push data to db(get id)
+        query = sqlalchemy.insert(data_model).values(queue_id=queue_id, data=data_json)
+
+        result = conn.execute(query)
+        conn.commit()
+
+        print(result.inserted_primary_key[0])
+
+        # work with data
+        query = sqlalchemy.select(data_model).where(data_model.c.id == result.inserted_primary_key[0])
+        for i in conn.execute(query):
+            inserted_data = i[2]
+
+        query = sqlalchemy.select(data_model).where(data_model.c.id != result.inserted_primary_key[0])
 
         for_duplicate = False
         for i in conn.execute(query):
-            for_duplicate = True
+            if inserted_data == i[2]:
+                for_duplicate = True
 
-        # insert data to db
+        # update the data if there is a duplicate
         if for_duplicate:
-            query = sqlalchemy.insert(data_model).values(queue_id=queue_id, data=None)
-        else:
-            query = sqlalchemy.insert(data_model).values(queue_id=queue_id, data=data_json)
-        conn.execute(query)
+            query = sqlalchemy.update(data_model).where(data_model.c.id == result.inserted_primary_key[0]) \
+                .values(data=None)
 
-        conn.commit()
+            conn.execute(query)
+            conn.commit()
+            print('hz')
 
-    # get id
-    query = "SELECT id FROM queue_yandex_reviews_in_filial WHERE queue_id = %s"
-    query = query % (str(queue_id))
-
-    sql, id_insert = select_query(sql, query)
-
-    return sql, id_insert[0]
+    return sql, result.inserted_primary_key
 
 
 def set_value(sql, table, column, value, where):

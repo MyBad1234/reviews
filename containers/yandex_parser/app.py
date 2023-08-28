@@ -64,7 +64,7 @@ def run():
 
     if sql:
         sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        # queue = {'queue_id': 115068, 'resource_id': 2670}
+        # queue = {'queue_id': 2110, 'resource_id': 2966}
 
         if queue:
             id_filial = queue.get('resource_id')
@@ -78,11 +78,14 @@ def run():
                 sql, yandex_url, organization = query_sql.getYandexUrl(sql, queue['resource_id'])
 
                 if yandex_url:
+                    # control count of repeat
+                    sql, control_repeat = query_sql.repeat_filial(sql, queue['resource_id'])
+
                     # Получаем страницу
-                    html = parser.loadPage(yandex_url, {'ip': proxy_dict[0], 'port': '1050'})
+                    html = parser.load_page(yandex_url, {'ip': proxy_dict[0], 'port': '1050'}, control_repeat)
                     if html:
                         # Парсим данные
-                        result = parser.grap(html)
+                        result = parser.grap(html, control_repeat)
                         if result:
                             # Преобразуем в json
                             json_string = json.dumps(result, ensure_ascii=False)
@@ -156,5 +159,4 @@ def test():
         conn.commit()
 
 
-while True:
-    run()
+run()

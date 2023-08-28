@@ -36,7 +36,61 @@ def replace_symbols(data_arr: list):
     return new_arr
 
 
-def get_all_reviews(browser: webdriver.Firefox, for_loading=0, for_now=0):
+def get_some_reviews(browser, for_loading=0, for_now=0):
+    """get 30 reviews with answer"""
+
+    # get all elements with review
+    review_elements = browser.find_elements(
+        by=By.CSS_SELECTOR, value='.business-reviews-card-view__review'
+    )
+
+    # parse elements
+    for_js = 0
+    for i in review_elements:
+        if (for_js >= for_now) and (for_js < 30):
+            # scroll to review
+            browser.execute_script("document.querySelectorAll('.business-reviews-card-view__review')"
+                                   "[" + str(for_js) + "].scrollIntoView({block: 'center'})")
+
+            # control answer
+            answer_is_present = browser.execute_script("return document.querySelectorAll('"
+                                                       ".business-reviews-card-view__review')"
+                                                       "[" + str(for_js) + "].querySelector('"
+                                                       ".business-review-view__reactions-container')"
+                                                       ".children.length")
+
+            if answer_is_present == 2:
+
+                # find btn for get answer and click to it
+                all_div = i.find_element(by=By.CSS_SELECTOR, value='.business-review-view__reactions-container') \
+                    .find_elements(by=By.CSS_SELECTOR, value='div')
+
+                for j in all_div:
+                    correct_div = j
+
+                correct_div.click()
+
+        if ((for_js % 10) == 0) and (for_js < 30):
+            time.sleep(2)
+
+        for_js += 1
+
+    # control count
+    time.sleep(3)
+
+    review_elements = browser.find_elements(
+        by=By.CSS_SELECTOR, value='.business-reviews-card-view__review'
+    )
+
+    count_elements = 0
+    for i in review_elements:
+        count_elements += 1
+
+    if (for_loading != count_elements) and (for_js < 30):
+        get_all_reviews(browser, count_elements, for_js)
+
+
+def get_all_reviews(browser, for_loading=0, for_now=0):
     """get all reviews with answer"""
 
     # get all elements with review
@@ -91,45 +145,50 @@ def get_all_reviews(browser: webdriver.Firefox, for_loading=0, for_now=0):
         get_all_reviews(browser, count_elements, for_js)
 
 
-# Заходим на страницу
-def loadPage(yandex_url, proxy: dict):
+def load_page(yandex_url, proxy: dict, repeat: bool):
+    """go to page"""
+
     logging.info('Start Load Page..')
-    #display = Display(visible=0, size=(800, 600))
-    #display.start()
+    # display = Display(visible=0, size=(800, 600))
+    # display.start()
     logging.info('Initialized virtual display..')
     options = webdriver.ChromeOptions()
 
     # set proxy
-    # proxy_str = proxy.get('ip') + ':' + proxy.get('port')
-    # options.add_argument('--proxy-server=%s' % proxy_str)
+    proxy_str = proxy.get('ip') + ':' + proxy.get('port')
+    options.add_argument('--proxy-server=%s' % proxy_str)
 
     browser = webdriver.Chrome(options=options)
 
-
     logging.info('Initialized webdriver..')
-    if (browser):
+    if browser:
         browser.get(yandex_url+'/reviews')
         time.sleep(5)
         logging.info('Accessed %s ..', yandex_url+'/reviews')
-        sort = browser.find_element(By.CSS_SELECTOR,  '.rating-ranking-view' )
-        if (sort):
+        sort = browser.find_element(By.CSS_SELECTOR,  '.rating-ranking-view')
+        if sort:
             sort.click()
             time.sleep(5)
-            sort_options = browser.find_elements(By.CSS_SELECTOR,  '.rating-ranking-view__popup-line' )
+            sort_options = browser.find_elements(By.CSS_SELECTOR,  '.rating-ranking-view__popup-line')
             if sort_options:
                 for option in sort_options:
                     title = option.get_attribute("aria-label")
-                    if (title == 'По новизне'):
+                    if title == 'По новизне':
                         option.click()
                         break
                 time.sleep(5)
 
                 # get all reviews
-                get_all_reviews(browser)
+                if repeat:
+                    get_some_reviews(browser)
+                else:
+                    get_all_reviews(browser)
 
                 result = browser.page_source
+
     browser.quit()
-    #display.stop()
+    # display.stop()
+
     if 'result' in locals():
         return result
 
@@ -191,17 +250,29 @@ def checkAnswer(review):
         return True
     else:
         return False
-    
-#Парсим данные
-def grap(html):
+
+
+def grap(html, repeat):
+    """parse data"""
+
+    # init bs4
     results = []
     soup = BeautifulSoup(html, "html.parser")
-    if (soup):
+
+    # work with bs4
+    if soup:
         review_container = soup.find(attrs={"class":{"business-reviews-card-view__reviews-container"}})
-        if (review_container):
+        if review_container:
             reviews = review_container.find_all(attrs={"class":{"business-reviews-card-view__review"}})
-            if (reviews):
+            if reviews:
+
+                for_count = 0
                 for review in reviews:
+                    # control count
+                    if repeat and (for_count == 30):
+                        break
+
+                    # add data to struct
                     info = {
                         'author': getAutor(review),
                         'rating': getRating(review),
@@ -212,5 +283,6 @@ def grap(html):
                     }
                     results.append(info)
 
-    return replace_symbols(results)
+                    for_count += 1
 
+    return replace_symbols(results)
