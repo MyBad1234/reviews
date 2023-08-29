@@ -195,7 +195,7 @@ def add_result(sql, queue_id, data_json):
             conn.commit()
             print('hz')
 
-    return sql, result.inserted_primary_key
+    return sql, result.inserted_primary_key[0]
 
 
 def set_value(sql, table, column, value, where):

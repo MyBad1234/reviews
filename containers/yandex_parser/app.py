@@ -159,4 +159,5 @@ def test():
         conn.commit()
 
 
-run()
+while True:
+    run()
