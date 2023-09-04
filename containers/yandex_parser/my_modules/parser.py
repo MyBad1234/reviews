@@ -9,6 +9,31 @@ import time
 import datetime
 
 
+def rating_data(browser: webdriver.Chrome):
+    """get data of rating"""
+
+    # rating
+    rating = browser.find_element(By.CSS_SELECTOR, '.business-summary-rating-badge-view__rating') \
+        .text
+
+    rating = rating.split()[1].replace(',', '.')
+
+    # count of evaluation
+    all_count = browser.find_element(By.CSS_SELECTOR, '.business-summary-rating-badge-view__rating-count') \
+        .text
+
+    all_count = all_count.split()[0]
+
+    # count of reviews
+    reviews_count = browser.find_element(By.CSS_SELECTOR, '._name_reviews').find_element(By.CSS_SELECTOR, 'div').text
+
+    return {
+        'rating': rating,
+        'all_count': all_count,
+        'reviews_count': reviews_count
+    }
+
+
 def replace_symbols(data_arr: list):
     """work with ' symbols """
 
@@ -178,6 +203,9 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
                         break
                 time.sleep(5)
 
+                # get rating
+                r_data = rating_data(browser)
+
                 # get all reviews
                 if repeat:
                     get_some_reviews(browser)
@@ -190,7 +218,7 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
     # display.stop()
 
     if 'result' in locals():
-        return result
+        return result, r_data
 
 #Получить автора отзыва
 def getAutor(review):

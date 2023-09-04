@@ -82,7 +82,10 @@ def run():
                     sql, control_repeat = query_sql.repeat_filial(sql, queue['resource_id'])
 
                     # Получаем страницу
-                    html = parser.load_page(yandex_url, {'ip': proxy_dict[0], 'port': '1050'}, control_repeat)
+                    html, r_data = parser.load_page(yandex_url, {'ip': proxy_dict[0], 'port': '1050'}, control_repeat)
+
+                    # update reting
+                    sql = query_sql.update_rating(sql, str(queue.get('resource_id')), **r_data)
                     if html:
                         # Парсим данные
                         result = parser.grap(html, control_repeat)

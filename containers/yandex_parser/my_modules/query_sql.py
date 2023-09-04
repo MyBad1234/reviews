@@ -41,6 +41,16 @@ else:
 DB_CHARSET = 'utf8mb4'
 
 
+def update_rating(sql, itemcampagn_id, all_count, reviews_count, rating):
+    """update data of rating"""
+
+    query = "UPDATE yandex_rating SET all_count=%s, reviews_count=%s, rating=%s WHERE itemcampagin_id=%s"
+    query = query % (all_count, reviews_count, rating, itemcampagn_id)
+
+    sql = update_query(sql, query)
+    return sql
+
+
 def control_count_json(sql, id_result_db: int):
     """control count of JSON objects in queue_yandex_reviews_in_filial"""
 
