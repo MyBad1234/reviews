@@ -41,13 +41,39 @@ else:
 DB_CHARSET = 'utf8mb4'
 
 
-def update_rating(sql, itemcampagn_id, all_count, reviews_count, rating):
+def update_rating(sql, itemcampagin_id, all_count, reviews_count, rating):
     """update data of rating"""
 
-    query = "UPDATE yandex_rating SET all_count=%s, reviews_count=%s, rating=%s WHERE itemcampagin_id=%s"
-    query = query % (all_count, reviews_count, rating, itemcampagn_id)
+    # work with time
+    this_time = str(int(time.time()))
 
-    sql = update_query(sql, query)
+    # control count of rows with itemcampagn_id
+    query = "SELECT * FROM yandex_rating WHERE itemcampagin_id = %s"
+    query = query % (itemcampagin_id, )
+
+    sql, data_from_query = select_query(sql, query)
+
+    if data_from_query is None:
+        create_row = True
+    else:
+        create_row = False
+
+    # update or create row with rating
+    if create_row:
+        query = ("INSERT INTO yandex_rating (itemcampagin_id, all_count, reviews_count, rating, updated) "
+                 "VALUES (%s, %s, %s, %s, %s)")
+
+        query = query % (itemcampagin_id, all_count, reviews_count, rating, this_time)
+
+        sql = insert_query(sql, query)
+        sql = sql[0]
+    else:
+        query = ("UPDATE yandex_rating SET updated = %s, "
+                 "all_count=%s, reviews_count=%s, rating=%s WHERE itemcampagin_id=%s")
+
+        query = query % (this_time, all_count, reviews_count, rating, itemcampagin_id)
+        sql = update_query(sql, query)
+
     return sql
 
 

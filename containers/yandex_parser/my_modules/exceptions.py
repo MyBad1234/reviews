@@ -20,3 +20,9 @@ class ProxyError(Exception):
     """if proxy is incorrect"""
 
     pass
+
+
+class ReviewsNotFound(Exception):
+    """if the company has no reviews"""
+
+    pass

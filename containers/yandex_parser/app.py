@@ -7,6 +7,9 @@ import pymysql
 import logging
 import traceback
 import datetime
+
+import selenium.common.exceptions
+
 from my_modules import query_sql, parser, logger
 from my_modules.exceptions import ProxyError
 from selenium.common.exceptions import WebDriverException
@@ -141,25 +144,6 @@ def run():
             sql.close()
         except pymysql.err.Error:
             pass
-
-
-def test():
-    engine = sqlalchemy.create_engine(
-        "mysql+pymysql://nikrbk_geo_test:zuJDfrKYLzbvnNs3V6PB@nikrbk.beget.tech/nikrbk_geo_test", echo=True)
-
-    metadata_obj = sqlalchemy.MetaData()
-    data_table = sqlalchemy.Table(
-        'queue_yandex_reviews_in_filial',
-        metadata_obj,
-        sqlalchemy.Column('queue_id', sqlalchemy.Integer),
-        sqlalchemy.Column('data', sqlalchemy.JSON)
-    )
-
-    with engine.connect() as conn:
-        stmp = sqlalchemy.insert(data_table).values(queue_id=109959, data={'lol': '\nlol"'})
-        conn.execute(stmp)
-
-        conn.commit()
 
 
 while True:

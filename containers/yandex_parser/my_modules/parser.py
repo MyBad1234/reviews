@@ -1,4 +1,6 @@
 import logging
+
+import selenium.common.exceptions
 from bs4 import BeautifulSoup
 from pyvirtualdisplay import Display
 from selenium import webdriver
@@ -9,20 +11,54 @@ import time
 import datetime
 
 
+def rating_data_main_page(browser: webdriver.Chrome):
+    """get data of rating without reviews"""
+
+    # rating
+    try:
+        rating = browser.find_element(By.CSS_SELECTOR, '.business-summary-rating-badge-view__rating') \
+            .text
+
+        rating = rating.split()[1].replace(',', '.')
+    except selenium.common.exceptions.NoSuchElementException:
+        rating = '0'
+
+    # count of evaluation
+    try:
+        all_count = browser.find_element(By.CSS_SELECTOR, '.business-summary-rating-badge-view__rating-count') \
+            .text
+
+        all_count = all_count.split()[0]
+    except selenium.common.exceptions.NoSuchElementException:
+        all_count = '0'
+
+    return {
+        'rating': rating,
+        'all_count': all_count,
+        'reviews_count': '0'
+    }
+
+
 def rating_data(browser: webdriver.Chrome):
     """get data of rating"""
 
     # rating
-    rating = browser.find_element(By.CSS_SELECTOR, '.business-summary-rating-badge-view__rating') \
-        .text
+    try:
+        rating = browser.find_element(By.CSS_SELECTOR, '.business-summary-rating-badge-view__rating') \
+            .text
 
-    rating = rating.split()[1].replace(',', '.')
+        rating = rating.split()[1].replace(',', '.')
+    except selenium.common.exceptions.NoSuchElementException:
+        rating = '0'
 
     # count of evaluation
-    all_count = browser.find_element(By.CSS_SELECTOR, '.business-summary-rating-badge-view__rating-count') \
-        .text
+    try:
+        all_count = browser.find_element(By.CSS_SELECTOR, '.business-summary-rating-badge-view__rating-count') \
+            .text
 
-    all_count = all_count.split()[0]
+        all_count = all_count.split()[0]
+    except selenium.common.exceptions.NoSuchElementException:
+        all_count = '0'
 
     # count of reviews
     reviews_count = browser.find_element(By.CSS_SELECTOR, '._name_reviews').find_element(By.CSS_SELECTOR, 'div').text
@@ -184,13 +220,20 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
     options.add_argument('--proxy-server=%s' % proxy_str)
 
     browser = webdriver.Chrome(options=options)
+    result = None
 
     logging.info('Initialized webdriver..')
     if browser:
         browser.get(yandex_url+'/reviews')
         time.sleep(5)
         logging.info('Accessed %s ..', yandex_url+'/reviews')
-        sort = browser.find_element(By.CSS_SELECTOR,  '.rating-ranking-view')
+
+        try:
+            sort = browser.find_element(By.CSS_SELECTOR,  '.rating-ranking-view')
+        except selenium.common.exceptions.NoSuchElementException:
+            r_data = rating_data_main_page(browser)
+            sort = None
+
         if sort:
             sort.click()
             time.sleep(5)
@@ -217,8 +260,7 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
     browser.quit()
     # display.stop()
 
-    if 'result' in locals():
-        return result, r_data
+    return result, r_data
 
 #Получить автора отзыва
 def getAutor(review):
