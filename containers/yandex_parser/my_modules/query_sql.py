@@ -86,8 +86,8 @@ def control_count_json(sql, id_result_db: int):
     sql, data = select_query(sql, query)
 
     # decode json to dict
-    data_dict = json.loads(data[0])
     try:
+        data_dict = json.loads(data[0])
         print(len(data_dict))
     except TypeError:
         pass
