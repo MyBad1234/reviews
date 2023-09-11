@@ -355,4 +355,4 @@ def grap(html, repeat):
 
                     for_count += 1
 
-    return replace_symbols(results)
+    return results
