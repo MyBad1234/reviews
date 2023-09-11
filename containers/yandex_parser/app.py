@@ -99,7 +99,7 @@ def run():
                                 # Если получили json статус задачи "готово"
                                 sql = query_sql.statusDone(sql, queue['queue_id'])
                                 # Получаем id записи результата
-                                sql, result_id = query_sql.add_result(sql, queue['queue_id'], result)
+                                sql, result_id = query_sql.add_result(sql, queue['queue_id'], json_string)
                                 # Создаём задачу на сохранение отзывов
                                 sql, result_id = query_sql.newSaveFilialQueue(sql, entity_id=queue['resource_id'],
                                                                               resource_id=result_id)
@@ -134,7 +134,7 @@ def run():
                     query_sql.statusError(sql, queue['queue_id'], error_text)
 
                 # send message
-                send_message_tg(dt_now, yandex_url, id_filial, organization)
+                # send_message_tg(dt_now, yandex_url, id_filial, organization)
 
         else:
             print('пауза')

@@ -186,6 +186,40 @@ def insert_query(sql: pymysql.connections.Connection, query: str, attempt=0, clo
 
 
 def add_result(sql, queue_id, data_json):
+    """set result to db"""
+
+    # control repeat
+    query = "SELECT * FROM queue_yandex_reviews_in_filial WHERE JSON_CONTAINS(data, %s)"
+
+    sql = checkConnect(sql)
+    with sql.cursor() as cursor:
+        cursor.execute(query, (data_json,))
+        data = cursor.fetchone()
+
+        # save changes in db
+        sql.commit()
+
+    if data is None:
+        repeat = False
+    else:
+        repeat = True
+
+    # set db
+    query = "INSERT INTO queue_yandex_reviews_in_filial (queue_id, data) VALUES (%s, %s)"
+
+    sql = checkConnect(sql)
+    with sql.cursor() as cursor:
+        if repeat:
+            cursor.execute(query, (queue_id, None))
+        else:
+            cursor.execute(query, (queue_id, data_json))
+
+        sql.commit()
+        update_id = cursor.lastrowid
+
+    return sql, update_id
+
+def add_result_test(sql, queue_id, data_json):
     """Добавить результат (Боря)"""
 
     # connect to db from sqlalchemy
