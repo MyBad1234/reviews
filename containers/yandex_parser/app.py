@@ -102,7 +102,7 @@ def run():
                                 sql, result_id = query_sql.add_result(sql, queue['queue_id'], json_string)
                                 # Создаём задачу на сохранение отзывов
                                 sql, result_id = query_sql.newSaveFilialQueue(sql, entity_id=queue['resource_id'],
-                                                                              resource_id=result_id)
+                                                                              resource_id=queue['queue_id'])
 
                                 # control count of reviews
                                 sql = query_sql.control_count_json(sql, queue['queue_id'])
