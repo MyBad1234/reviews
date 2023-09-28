@@ -64,7 +64,7 @@ def run():
 
     # get env
     try:
-        get_path_env()
+        dotenv.load_dotenv(dotenv_path=get_path_env())
     except EnvPathException:
         print('it is error')
         return
