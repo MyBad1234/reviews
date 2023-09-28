@@ -25,7 +25,7 @@ logging.getLogger().setLevel(logging.INFO)
 def get_path_env():
     """control path to .env"""
     try:
-        return sys.argv[2]
+        return sys.argv[1]
     except IndexError:
         raise EnvPathException('specify the path to .env')
 
