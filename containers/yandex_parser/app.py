@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import json
 import requests
@@ -8,26 +7,17 @@ import pymysql
 import logging
 import traceback
 import datetime
-import dotenv
 
 import selenium.common.exceptions
 
 from my_modules import query_sql, parser, logger
-from my_modules.exceptions import ProxyError, EnvPathException
+from my_modules.exceptions import ProxyError
 from selenium.common.exceptions import WebDriverException
 
 # for test sqlalchemy
 import sqlalchemy
 
 logging.getLogger().setLevel(logging.INFO)
-
-
-def get_path_env():
-    """control path to .env"""
-    try:
-        return sys.argv[1]
-    except IndexError:
-        raise EnvPathException('specify the path to .env')
 
 
 def send_message_tg(datetime_work, company_yandex_url, filial_id, company_name):
@@ -61,13 +51,6 @@ def run():
     print('it is start')
     dt_now = datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')
     print(dt_now)
-
-    # get env
-    try:
-        dotenv.load_dotenv(dotenv_path=get_path_env())
-    except EnvPathException:
-        print('it is error')
-        return
 
     # connect to db
     try:

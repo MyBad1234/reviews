@@ -1,10 +1,23 @@
 import os
+import sys
 import pymysql
 import json
 import time
+import dotenv
 import sqlalchemy
 
-from .exceptions import SelectExceptions, UpdateExceptions, InsertExceptions, ProxyError
+from .exceptions import SelectExceptions, UpdateExceptions, InsertExceptions, ProxyError, EnvPathException
+
+
+def get_path_env():
+    """control path to .env"""
+    try:
+        return sys.argv[1]
+    except IndexError:
+        raise EnvPathException('specify the path to .env')
+
+
+dotenv.load_dotenv(dotenv_path=get_path_env())
 
 
 # is docker or no
