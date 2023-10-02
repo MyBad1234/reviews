@@ -138,7 +138,7 @@ def run():
 
         else:
             print('пауза')
-            time.sleep(300)
+            time.sleep(20)
 
         try:
             sql.close()

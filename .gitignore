@@ -12,3 +12,6 @@ geckodriver.log
 containers/yandex_parser/geckodriver.log
 containers/yandex_parser/errors.log
 containers/yandex_parser/my_modules/logger.py
+
+
+.env
