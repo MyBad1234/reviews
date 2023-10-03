@@ -314,8 +314,9 @@ def get_proxy(sql):
 
     # get proxy
     query = ("SELECT `ip`, `login`, `password`, `id` FROM `proxy` WHERE `date_off` "
-             "> " + str(int(time.time())) + " AND `connect_type_id` = 2 ORDER BY "
-             "`last_active` ASC LIMIT 1")
+             "> " + str(int(time.time())) + " AND `connect_type_id` = 2 "
+             "AND server_ip = '" + str(os.environ.get('IP_SERVER')) + "' "
+             "ORDER BY `last_active` ASC LIMIT 1")
 
     sql, data = select_query(sql, query)
 
