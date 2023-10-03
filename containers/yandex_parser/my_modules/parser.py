@@ -262,26 +262,28 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
 
     return result, r_data
 
-#Получить автора отзыва
-def getAutor(review):
-    div_autor = review.find(attrs={"class":{"business-review-view__author"}})
-    if (div_autor):
-        name = review.find(attrs={"itemprop":{"name"}})
-        if (name.contents):
+
+def get_autor(review):
+    """get author of response"""
+
+    div_autor = review.find(attrs={"class": {"business-review-view__author"}})
+    if div_autor:
+        name = review.find(attrs={"itemprop": {"name"}})
+        if name.contents:
             return name.contents[0]
         else:
-            return False
+            return ''
     else:
-        return False
+        return ''
 
 
 def get_answer_text(review):
-    div_answer = review.find(attrs={"class":{"business-review-comment__bubble"}})
+    div_answer = review.find(attrs={"class": {"business-review-comment__bubble"}})
 
     if div_answer:
         return div_answer.text
     else:
-        return False
+        return ''
 
 
 # Получить рейтинг
@@ -344,7 +346,7 @@ def grap(html, repeat):
 
                     # add data to struct
                     info = {
-                        'author': getAutor(review),
+                        'author': get_autor(review),
                         'rating': getRating(review),
                         'date': getDate(review),
                         'text': getText(review),
