@@ -66,8 +66,8 @@ def run():
     id_filial = None
 
     if sql:
-        sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        # queue = {'queue_id': 2110, 'resource_id': 2966}
+        # sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
+        queue = {'queue_id': 64980, 'resource_id': 1928}
 
         if queue:
             id_filial = queue.get('resource_id')
@@ -77,7 +77,7 @@ def run():
                 sql, proxy_dict = query_sql.get_proxy(sql)
 
                 # Если есть задача - присваиваем статус "в работе"
-                sql = query_sql.statusInProcess(sql, queue['queue_id'])
+                # sql = query_sql.statusInProcess(sql, queue['queue_id'])
                 sql, yandex_url, organization = query_sql.getYandexUrl(sql, queue['resource_id'])
 
                 if yandex_url:
@@ -88,24 +88,26 @@ def run():
                     html, r_data = parser.load_page(yandex_url, {'ip': proxy_dict[0], 'port': '1050'}, control_repeat)
 
                     # update reting
-                    sql = query_sql.update_rating(sql, str(queue.get('resource_id')), **r_data)
+                    # sql = query_sql.update_rating(sql, str(queue.get('resource_id')), **r_data)
                     if html:
                         # Парсим данные
-                        result = parser.grap(html, control_repeat)
+                        # result = parser.grap(html, control_repeat)
+                        result = parser.grap(html, False)
                         if result:
                             # Преобразуем в json
                             json_string = json.dumps(result, ensure_ascii=False)
                             if json_string:
                                 # Если получили json статус задачи "готово"
-                                sql = query_sql.statusDone(sql, queue['queue_id'])
+                                # sql = query_sql.statusDone(sql, queue['queue_id'])
                                 # Получаем id записи результата
-                                sql, result_id = query_sql.add_result(sql, queue['queue_id'], json_string)
+                                # sql, result_id = query_sql.add_result(sql, queue['queue_id'], json_string)
                                 # Создаём задачу на сохранение отзывов
-                                sql, result_id = query_sql.newSaveFilialQueue(sql, entity_id=queue['resource_id'],
-                                                                              resource_id=queue['queue_id'])
+                                # sql, result_id = query_sql.newSaveFilialQueue(sql, entity_id=queue['resource_id'],
+                                #                                               resource_id=queue['queue_id'])
 
                                 # control count of reviews
-                                sql = query_sql.control_count_json(sql, queue['queue_id'])
+                                # sql = query_sql.control_count_json(sql, queue['queue_id'])
+                                print('ok')
                             else:
                                 sql = query_sql.statusError(sql, queue['queue_id'], 'Ошибка получения json')
                         else:
@@ -119,8 +121,10 @@ def run():
 
             # Если получили ошибку драйвера, данная задача получает статус новой и делаем паузу 10 минут
             except WebDriverException:
-               if queue['queue_id']:
-                   sql = query_sql.statusError(sql, queue['queue_id'], 'hz')
+                print(traceback.format_exc())
+                if queue['queue_id']:
+                    # sql = query_sql.statusError(sql, queue['queue_id'], 'hz')
+                    pass
 
             except ProxyError:
                 print('proxy error')
@@ -128,10 +132,10 @@ def run():
 
             except Exception as error:
                 print(traceback.format_exc())
-                if queue['queue_id']:
-                    error_text = "Ошибка:" + str(repr(error))
-                    logger.errorLog(error_text)
-                    query_sql.statusError(sql, queue['queue_id'], error_text)
+                #if queue['queue_id']:
+                #    error_text = "Ошибка:" + str(repr(error))
+                #    logger.errorLog(error_text)
+                #    query_sql.statusError(sql, queue['queue_id'], error_text)
 
                 # send message
                 # send_message_tg(dt_now, yandex_url, id_filial, organization)

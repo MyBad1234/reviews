@@ -151,7 +151,7 @@ def get_some_reviews(browser, for_loading=0, for_now=0):
         get_all_reviews(browser, count_elements, for_js)
 
 
-def get_all_reviews(browser, for_loading=0, for_now=0):
+def get_all_reviews1(browser, for_loading=0, for_now=0):
     """get all reviews with answer"""
 
     # get all elements with review
@@ -166,7 +166,7 @@ def get_all_reviews(browser, for_loading=0, for_now=0):
 
             # scroll to review
             browser.execute_script("document.querySelectorAll('.business-reviews-card-view__review')"
-                                   "[" + str(for_js) + "].scrollIntoView({block: 'center'})")
+                                   "[" + str(for_js) + "].scrollIntoView({block: 'center', 'behavior': 'smooth'})")
 
             # control answer
             answer_is_present = browser.execute_script("return document.querySelectorAll('"
@@ -191,6 +191,7 @@ def get_all_reviews(browser, for_loading=0, for_now=0):
 
         for_js += 1
 
+    """
     # control count
     time.sleep(3)
 
@@ -204,6 +205,47 @@ def get_all_reviews(browser, for_loading=0, for_now=0):
 
     if for_loading != count_elements:
         get_all_reviews(browser, count_elements, for_js)
+    """
+
+
+def see_all_answer(browser):
+    script = ("function lol(elem){ "
+              "console.log('wow'); "
+              "elem.scrollIntoView({'block': 'center', 'behavior': 'smooth'});"
+              "elem.click() " 
+              "} "
+              "for (let i of document.querySelectorAll('.business-review-view__comment-expand')) { "
+              "setTimeout(500, lol(i)); "
+              "}")
+
+    browser.execute_script(script)
+
+
+def get_all_reviews(browser, count_elements=0, for_js=0):
+    """test for reviews"""
+
+    script = ("function get_all_reviews(for_loading=0, for_now=0) {"
+              "let review_elements = document.querySelectorAll('.business-reviews-card-view__review'); "
+              "let for_js = 0; "
+              "for (let i of review_elements) { "
+              "if (for_js > for_now) { "
+              "document.querySelectorAll('.business-reviews-card-view__review')[for_js].scrollIntoView({block: 'center', 'behavior': 'smooth'}); "
+              "let answer_is_present = document.querySelectorAll('.business-reviews-card-view__review')[for_js].querySelector('.business-review-view__reactions-container').children.length; "
+              "} "
+              "for_js += 1; }}"
+              "get_all_reviews()")
+
+    browser.execute_script(script)
+
+    time.sleep(2)
+    now_elements = browser.execute_script(
+        "return document.querySelectorAll('.business-reviews-card-view__review').length")
+
+    if now_elements != count_elements:
+        get_all_reviews(browser, now_elements)
+    else:
+        if for_js < 3:
+            get_all_reviews(browser, now_elements, for_js + 1)
 
 
 def load_page(yandex_url, proxy: dict, repeat: bool):
@@ -216,8 +258,8 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
     options = webdriver.ChromeOptions()
 
     # set proxy
-    proxy_str = proxy.get('ip') + ':' + proxy.get('port')
-    options.add_argument('--proxy-server=%s' % proxy_str)
+    # proxy_str = proxy.get('ip') + ':' + proxy.get('port')
+    # options.add_argument('--proxy-server=%s' % proxy_str)
 
     browser = webdriver.Chrome(options=options)
     result = None
@@ -225,7 +267,7 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
     logging.info('Initialized webdriver..')
     if browser:
         browser.get(yandex_url+'/reviews')
-        time.sleep(5)
+        time.sleep(3)
         logging.info('Accessed %s ..', yandex_url+'/reviews')
 
         try:
@@ -236,7 +278,7 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
 
         if sort:
             sort.click()
-            time.sleep(5)
+            time.sleep(3)
             sort_options = browser.find_elements(By.CSS_SELECTOR,  '.rating-ranking-view__popup-line')
             if sort_options:
                 for option in sort_options:
@@ -244,16 +286,21 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
                     if title == 'По новизне':
                         option.click()
                         break
-                time.sleep(5)
+                time.sleep(3)
+
+
 
                 # get rating
                 r_data = rating_data(browser)
 
                 # get all reviews
                 if repeat:
-                    get_some_reviews(browser)
+                    # get_some_reviews(browser)
+                    get_all_reviews(browser)
                 else:
                     get_all_reviews(browser)
+
+                see_all_answer(browser)
 
                 result = browser.page_source
 
@@ -278,7 +325,7 @@ def get_autor(review):
 
 
 def get_answer_text(review):
-    div_answer = review.find(attrs={"class": {"business-review-comment__bubble"}})
+    div_answer = review.find(attrs={"class": {"business-review-comment-content__bubble"}})
 
     if div_answer:
         return div_answer.text
