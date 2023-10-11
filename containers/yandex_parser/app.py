@@ -100,9 +100,16 @@ def run():
                                 sql = query_sql.statusDone(sql, queue['queue_id'])
                                 # Получаем id записи результата
                                 sql, result_id = query_sql.add_result(sql, queue['queue_id'], json_string)
+
+                                print(f'id_result: {result_id}')
+
                                 # Создаём задачу на сохранение отзывов
                                 sql, result_id = query_sql.newSaveFilialQueue(sql, entity_id=queue['resource_id'],
                                                                               resource_id=queue['queue_id'])
+
+
+                                print(f'repeat: {str(control_repeat)}')
+                                time.sleep(120)
 
                             else:
                                 sql = query_sql.statusError(sql, queue['queue_id'], 'Ошибка получения json')
