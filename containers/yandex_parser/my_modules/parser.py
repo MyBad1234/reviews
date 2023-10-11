@@ -97,115 +97,31 @@ def replace_symbols(data_arr: list):
     return new_arr
 
 
-def get_some_reviews(browser, for_loading=0, for_now=0):
-    """get 30 reviews with answer"""
+def get_some_reviews(browser, count_elements=0, for_js=0):
+    """test for reviews"""
 
-    # get all elements with review
-    review_elements = browser.find_elements(
-        by=By.CSS_SELECTOR, value='.business-reviews-card-view__review'
-    )
+    script = ("function get_all_reviews(for_loading=0, for_now=0) {"
+              "let review_elements = document.querySelectorAll('.business-reviews-card-view__review'); "
+              "let for_js = 0; "
+              "for (let i of review_elements) { "
+              "if ((for_js > for_now) && (for_js < 30)) { "
+              "document.querySelectorAll('.business-reviews-card-view__review')[for_js].scrollIntoView({block: 'center', 'behavior': 'smooth'}); "
+              "let answer_is_present = document.querySelectorAll('.business-reviews-card-view__review')[for_js].querySelector('.business-review-view__reactions-container').children.length; "
+              "} "
+              "for_js += 1; }}"
+              "get_all_reviews()")
 
-    # parse elements
-    for_js = 0
-    for i in review_elements:
-        if (for_js >= for_now) and (for_js < 30):
-            # scroll to review
-            browser.execute_script("document.querySelectorAll('.business-reviews-card-view__review')"
-                                   "[" + str(for_js) + "].scrollIntoView({block: 'center'})")
+    browser.execute_script(script)
 
-            # control answer
-            answer_is_present = browser.execute_script("return document.querySelectorAll('"
-                                                       ".business-reviews-card-view__review')"
-                                                       "[" + str(for_js) + "].querySelector('"
-                                                       ".business-review-view__reactions-container')"
-                                                       ".children.length")
+    time.sleep(2)
+    now_elements = browser.execute_script(
+        "return document.querySelectorAll('.business-reviews-card-view__review').length")
 
-            if answer_is_present == 2:
-
-                # find btn for get answer and click to it
-                all_div = i.find_element(by=By.CSS_SELECTOR, value='.business-review-view__reactions-container') \
-                    .find_elements(by=By.CSS_SELECTOR, value='div')
-
-                for j in all_div:
-                    correct_div = j
-
-                correct_div.click()
-
-        if ((for_js % 10) == 0) and (for_js < 30):
-            time.sleep(2)
-
-        for_js += 1
-
-    # control count
-    time.sleep(3)
-
-    review_elements = browser.find_elements(
-        by=By.CSS_SELECTOR, value='.business-reviews-card-view__review'
-    )
-
-    count_elements = 0
-    for i in review_elements:
-        count_elements += 1
-
-    if (for_loading != count_elements) and (for_js < 30):
-        get_all_reviews(browser, count_elements, for_js)
-
-
-def get_all_reviews1(browser, for_loading=0, for_now=0):
-    """get all reviews with answer"""
-
-    # get all elements with review
-    review_elements = browser.find_elements(
-        by=By.CSS_SELECTOR, value='.business-reviews-card-view__review'
-    )
-
-    # parse elements
-    for_js = 0
-    for i in review_elements:
-        if for_js >= for_now:
-
-            # scroll to review
-            browser.execute_script("document.querySelectorAll('.business-reviews-card-view__review')"
-                                   "[" + str(for_js) + "].scrollIntoView({block: 'center', 'behavior': 'smooth'})")
-
-            # control answer
-            answer_is_present = browser.execute_script("return document.querySelectorAll('"
-                                                       ".business-reviews-card-view__review')"
-                                                       "[" + str(for_js) + "].querySelector('"
-                                                       ".business-review-view__reactions-container')"
-                                                       ".children.length")
-
-            if answer_is_present == 2:
-
-                # find btn for get answer and click to it
-                all_div = i.find_element(by=By.CSS_SELECTOR, value='.business-review-view__reactions-container') \
-                    .find_elements(by=By.CSS_SELECTOR, value='div')
-
-                for j in all_div:
-                    correct_div = j
-
-                correct_div.click()
-
-        if (for_js % 10) == 0:
-            time.sleep(2)
-
-        for_js += 1
-
-    """
-    # control count
-    time.sleep(3)
-
-    review_elements = browser.find_elements(
-        by=By.CSS_SELECTOR, value='.business-reviews-card-view__review'
-    )
-
-    count_elements = 0
-    for i in review_elements:
-        count_elements += 1
-
-    if for_loading != count_elements:
-        get_all_reviews(browser, count_elements, for_js)
-    """
+    if now_elements != count_elements:
+        get_all_reviews(browser, now_elements)
+    else:
+        if for_js < 3:
+            get_all_reviews(browser, now_elements, for_js + 1)
 
 
 def see_all_answer(browser):
@@ -258,8 +174,8 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
     options = webdriver.ChromeOptions()
 
     # set proxy
-    # proxy_str = proxy.get('ip') + ':' + proxy.get('port')
-    # options.add_argument('--proxy-server=%s' % proxy_str)
+    proxy_str = proxy.get('ip') + ':' + proxy.get('port')
+    options.add_argument('--proxy-server=%s' % proxy_str)
 
     browser = webdriver.Chrome(options=options)
     result = None
@@ -288,15 +204,12 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
                         break
                 time.sleep(3)
 
-
-
                 # get rating
                 r_data = rating_data(browser)
 
                 # get all reviews
                 if repeat:
-                    # get_some_reviews(browser)
-                    get_all_reviews(browser)
+                    get_some_reviews(browser)
                 else:
                     get_all_reviews(browser)
 
