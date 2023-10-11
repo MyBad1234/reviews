@@ -113,7 +113,7 @@ def get_some_reviews(browser, count_elements=0, for_js=0):
 
     browser.execute_script(script)
 
-    time.sleep(2)
+    time.sleep(3)
     now_elements = browser.execute_script(
         "return document.querySelectorAll('.business-reviews-card-view__review').length")
 
@@ -135,6 +135,7 @@ def see_all_answer(browser):
               "}")
 
     browser.execute_script(script)
+    time.sleep(10)
 
 
 def get_all_reviews(browser, count_elements=0, for_js=0):
