@@ -182,7 +182,8 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
 
     logging.info('Initialized webdriver..')
     if browser:
-        browser.get(yandex_url+'/reviews')
+        print(yandex_url + '/reviews')
+        browser.get(yandex_url + '/reviews')
         time.sleep(3)
         logging.info('Accessed %s ..', yandex_url+'/reviews')
 
