@@ -23,28 +23,7 @@ logging.getLogger().setLevel(logging.INFO)
 def send_message_tg(datetime_work, company_yandex_url, filial_id, company_name):
     """send message to tg"""
 
-    # init tg variables
-    token = os.environ.get('TG_BOT')
-    chat = os.environ.get('TG_CHAT')
-
-    row_tg = f"Ошибка при получении отзывов \n"
-
-    if company_name is not None:
-        row_tg += f"Название комании: {str(company_name)} \n"
-
-    if filial_id is not None:
-        row_tg += f"Филиал: {str(filial_id)} \n"
-
-    if company_yandex_url is not None:
-        row_tg += f"Ссылка на yandex карты: {str(company_yandex_url)} \n"
-
-    if filial_id is not None:
-        url = 'https://test.geoadv.ru/itemcampagin/view?id=' + str(filial_id)
-        row_tg += f"Ссылка на профиль: {url} \n"
-
-    row_tg += f"Дата и время: {datetime_work}"
-    requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
-                  json={"chat_id": chat, "text": row_tg})
+    pass
 
 
 def run():
@@ -64,6 +43,7 @@ def run():
     yandex_url = None
     organization = None
     id_filial = None
+    queue = None
 
     if sql:
         sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
@@ -107,7 +87,6 @@ def run():
                                 sql, result_id = query_sql.newSaveFilialQueue(sql, entity_id=queue['resource_id'],
                                                                               resource_id=queue['queue_id'])
 
-
                                 print(f'repeat: {str(control_repeat)}')
                                 time.sleep(120)
 
@@ -122,13 +101,6 @@ def run():
                 else:
                     sql = query_sql.statusError(sql, queue['queue_id'], 'Нет URL филиала')
 
-            # Если получили ошибку драйвера, данная задача получает статус новой и делаем паузу 10 минут
-            except WebDriverException:
-                print(traceback.format_exc())
-                if queue['queue_id']:
-                    sql = query_sql.statusError(sql, queue['queue_id'], 'hz')
-                    send_message_tg(dt_now, yandex_url, id_filial, organization)
-
             except ProxyError:
                 print('proxy error')
                 time.sleep(300)
@@ -139,6 +111,10 @@ def run():
                     error_text = "Ошибка:" + str(repr(error))
                     logger.errorLog(error_text)
                     query_sql.statusError(sql, queue['queue_id'], error_text)
+
+                # write log to error file
+                error_obj = logger.ErrorClass()
+                error_obj.write_error(queue.get('queue_id'), traceback.format_exc())
 
                 # send message
                 send_message_tg(dt_now, yandex_url, id_filial, organization)
