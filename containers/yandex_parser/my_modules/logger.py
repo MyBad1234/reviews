@@ -63,7 +63,7 @@ class ErrorClass(FileUtils):
             file.write(text)
 
 
-class LastWork(FileUtils)
+class LastWork(FileUtils):
     """class for checking last work of reviews"""
 
     def __init__(self):
