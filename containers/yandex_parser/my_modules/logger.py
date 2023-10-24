@@ -30,8 +30,10 @@ class FileUtils:
             path += '/files_info/'
 
         # create temp
-        if os.path.exists(path):
+        if not os.path.exists(path):
             os.mkdir(path)
+
+        return path
 
     def make_path(self, file_name):
         """make path with filename"""
@@ -51,16 +53,38 @@ class ErrorClass(FileUtils):
     """work with errors"""
 
     def __init__(self):
+        self.dt = datetime.datetime.now()
         super().check_path()
 
-    def write_error(self, file_name, text):
+        # delete old files
+        self.delete_old_files()
+
+    def delete_old_files(self):
+        """delete files with date > timedelta(days=4)"""
+
+        for i in os.listdir(super().check_path()):
+            try:
+                if i.split('.')[-1] == 'txt':
+                    count = datetime.datetime.now() \
+                        - datetime.datetime.strptime(i.split('.')[0], '%d-%m-%y')
+
+                    if count > datetime.timedelta(days=4):
+                        os.remove(super().make_path(i))
+
+            except (IndexError, ValueError):
+                pass
+
+    def write_error(self, head, text):
         """write traceback to file"""
 
-        path = super().make_path(file_name + '.txt')
+        # make name
+        file_name = self.dt.strftime('%d-%m-%y') + '.txt'
+
+        path = super().make_path(file_name)
 
         # write log with error
-        with open(path, 'w') as file:
-            file.write(text)
+        with open(path, 'a') as file:
+            file.write('\n\n\n\n\n' + str(head) + '\n' + str(text))
 
 
 class LastWork(FileUtils):

@@ -20,10 +20,49 @@ import sqlalchemy
 logging.getLogger().setLevel(logging.INFO)
 
 
-def send_message_tg(datetime_work, company_yandex_url, filial_id, company_name):
+def send_message_tg(queue_id=None, company=None, filial=None, url=None):
     """send message to tg"""
 
-    pass
+    # control thread for theme of group
+    thread_id = os.environ.get('THREAD_GROUP_GOOD')
+
+    # control server name (None or no)
+    server_name = os.environ.get('SERVER_NAME')
+    if server_name is None:
+        server_name = 'неизвестно'
+
+    # work with task
+    if queue_id is not None:
+        data = {
+            'task': queue_id,
+            'company': company,
+            'filial': filial,
+            'url': url
+        }
+    else:
+        data = {
+            'task': 'неизвестно',
+            'company': 'неизвестно',
+            'filial': 'неизвестно',
+            'url': 'неизвестно'
+        }
+
+    # get params for send message to tg
+    token = os.environ.get('TG_BOT')
+    chat = os.environ.get('TG_CHAT')
+
+    row_tg = (f"Ошибка при парсинге отзывов #{data.get('task')}\n"
+              f"Компания: {data.get('company')}\n"
+              f"Филиал: {data.get('filial')}\n"
+              f"Ссылка: {data.get('url')}")
+
+    if thread_id is None:
+        requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                      json={"chat_id": int(chat), "text": row_tg})
+
+    else:
+        requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                      json={"chat_id": int(chat), "text": row_tg, 'message_thread_id': int(thread_id)})
 
 
 def run():
@@ -46,8 +85,8 @@ def run():
     queue = None
 
     if sql:
-        sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        # queue = {'queue_id': 64980, 'resource_id': 1928}
+        # sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
+        queue = {'queue_id': 121471, 'resource_id': 1548}
 
         if queue:
             id_filial = queue.get('resource_id')
@@ -114,10 +153,13 @@ def run():
 
                 # write log to error file
                 error_obj = logger.ErrorClass()
-                error_obj.write_error(queue.get('queue_id'), traceback.format_exc())
+                error_obj.write_error(queue, traceback.format_exc())
 
                 # send message
-                send_message_tg(dt_now, yandex_url, id_filial, organization)
+                send_message_tg(queue_id=queue.get('queue_id'),
+                                company=organization,
+                                filial=id_filial,
+                                url=yandex_url)
 
         else:
             print('пауза')

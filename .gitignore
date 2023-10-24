@@ -15,3 +15,4 @@ containers/yandex_parser/my_modules/logger.py
 
 
 .env
+containers/yandex_parser/files_info/
