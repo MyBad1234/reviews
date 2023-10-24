@@ -85,8 +85,8 @@ def run():
     queue = None
 
     if sql:
-        # sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        queue = {'queue_id': 121471, 'resource_id': 1548}
+        sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
+        # queue = {'queue_id': 121471, 'resource_id': 1548}
 
         if queue:
             id_filial = queue.get('resource_id')
