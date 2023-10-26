@@ -86,7 +86,7 @@ def run():
 
     if sql:
         sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        # queue = {'queue_id': 121471, 'resource_id': 1548}
+        # queue = {'queue_id': 131008, 'resource_id': 2088}
 
         if queue:
             id_filial = queue.get('resource_id')
@@ -127,7 +127,7 @@ def run():
                                                                               resource_id=queue['queue_id'])
 
                                 print(f'repeat: {str(control_repeat)}')
-                                time.sleep(120)
+                                time.sleep(20)
 
                             else:
                                 sql = query_sql.statusError(sql, queue['queue_id'], 'Ошибка получения json')

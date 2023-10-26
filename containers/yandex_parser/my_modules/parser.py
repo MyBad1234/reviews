@@ -228,13 +228,11 @@ def load_page(yandex_url, proxy: dict, repeat: bool):
 def get_autor(review):
     """get author of response"""
 
-    div_autor = review.find(attrs={"class": {"business-review-view__author"}})
+    div_autor = review.find(attrs={"class": {"business-review-view__author"}}) \
+        .find('span')
+
     if div_autor:
-        name = review.find(attrs={"itemprop": {"name"}})
-        if name.contents:
-            return name.contents[0]
-        else:
-            return ''
+        return div_autor.text
     else:
         return ''
 
