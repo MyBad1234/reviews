@@ -86,7 +86,7 @@ def run():
 
     if sql:
         sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        # queue = {'queue_id': 131008, 'resource_id': 2088}
+        # queue = {'queue_id': 135588, 'resource_id': 1716}
 
         if queue:
             id_filial = queue.get('resource_id')
@@ -161,6 +161,7 @@ def run():
                                 filial=id_filial,
                                 url=yandex_url)
 
+            logger.send_rabbit()
         else:
             print('пауза')
             time.sleep(20)

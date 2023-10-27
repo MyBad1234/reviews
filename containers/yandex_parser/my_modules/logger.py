@@ -1,5 +1,6 @@
 import os
 import json
+import pika
 import pathlib
 import platform
 import datetime
@@ -104,3 +105,17 @@ class LastWork(FileUtils):
                 'use': False,
                 'last_update': datetime.datetime.now().strftime('%d.%m.%y %H:%M')
             }, indent=4))
+
+
+def send_rabbit():
+    """send statistic to rabbit"""
+
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host='localhost'))
+    channel = connection.channel()
+
+    channel.queue_declare(queue='reviews')
+
+    channel.basic_publish(exchange='', routing_key='reviews', body=b'Hello World!')
+    print(" [x] Sent 'Hello World!'")
+    connection.close()
