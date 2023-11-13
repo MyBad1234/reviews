@@ -65,6 +65,27 @@ def send_message_tg(queue_id=None, company=None, filial=None, url=None):
                       json={"chat_id": int(chat), "text": row_tg, 'message_thread_id': int(thread_id)})
 
 
+def not_reviews(sql, queue, repeat):
+    """if there are no reviews"""
+
+    # Если получили json статус задачи "готово"
+    sql = query_sql.statusDone(sql, queue['queue_id'])
+
+    # Получаем id записи результата
+    sql, result_id = query_sql.add_result(sql, queue['queue_id'], '[]')
+
+    print(f'id_result: {result_id}')
+
+    # Создаём задачу на сохранение отзывов
+    sql, result_id = query_sql.newSaveFilialQueue(sql, entity_id=queue['resource_id'],
+                                                  resource_id=queue['queue_id'])
+
+    print(f'repeat: {str(repeat)}')
+    time.sleep(20)
+
+    return sql
+
+
 def run():
     print('it is start')
     dt_now = datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')
@@ -86,7 +107,7 @@ def run():
 
     if sql:
         sql, queue = query_sql.getFindFilialQueue(sql, query_sql.TYPE['python_parser'])
-        # queue = {'queue_id': 135588, 'resource_id': 1716}
+        # queue = {'queue_id': 135588, 'resource_id': 2265}
 
         if queue:
             id_filial = queue.get('resource_id')
@@ -117,6 +138,7 @@ def run():
                             if json_string:
                                 # Если получили json статус задачи "готово"
                                 sql = query_sql.statusDone(sql, queue['queue_id'])
+
                                 # Получаем id записи результата
                                 sql, result_id = query_sql.add_result(sql, queue['queue_id'], json_string)
 
@@ -135,8 +157,8 @@ def run():
                             logger.errorLog("Ошибка в парсере")
                             sql = query_sql.statusError(sql, queue['queue_id'], 'Не получены данные со страницы')
                     else:
-                        logger.errorLog("Не получена страница")
-                        sql = query_sql.statusError(sql, queue['queue_id'], 'Не получена страница')
+                        sql = not_reviews(sql, queue, control_repeat)
+
                 else:
                     sql = query_sql.statusError(sql, queue['queue_id'], 'Нет URL филиала')
 
