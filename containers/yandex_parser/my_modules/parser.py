@@ -106,7 +106,6 @@ def get_some_reviews(browser, count_elements=0, for_js=0):
               "for (let i of review_elements) { "
               "if ((for_js > for_now) && (for_js < 30)) { "
               "document.querySelectorAll('.business-reviews-card-view__review')[for_js].scrollIntoView({block: 'center', 'behavior': 'smooth'}); "
-              "let answer_is_present = document.querySelectorAll('.business-reviews-card-view__review')[for_js].querySelector('.business-review-view__reactions-container').children.length; "
               "} "
               "for_js += 1; }}"
               "get_all_reviews()")
@@ -147,7 +146,6 @@ def get_all_reviews(browser, count_elements=0, for_js=0):
               "for (let i of review_elements) { "
               "if (for_js > for_now) { "
               "document.querySelectorAll('.business-reviews-card-view__review')[for_js].scrollIntoView({block: 'center', 'behavior': 'smooth'}); "
-              "let answer_is_present = document.querySelectorAll('.business-reviews-card-view__review')[for_js].querySelector('.business-review-view__reactions-container').children.length; "
               "} "
               "for_js += 1; }}"
               "get_all_reviews()")
